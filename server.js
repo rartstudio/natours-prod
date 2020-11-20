@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+dotenv.config({ path: './config.env' });
 const app = require('./app');
 
-dotenv.config({ path: './config.env' });
 
 //save connection string and replace password text to env database password
 const DB = process.env.DATABASE.replace('<PASSWORD>',process.env.PASSWORD);
@@ -11,10 +11,10 @@ const DB = process.env.DATABASE.replace('<PASSWORD>',process.env.PASSWORD);
 //if connection success it will return a object to the console
 //if success comment in con.connections and change con to ()
 mongoose.connect(DB, {
-  useUnifiedTopology: true,
+  	useUnifiedTopology: true,
 	useNewUrlParser: true,
 	useCreateIndex: true,
-  useFindAndModify: false,
+  	useFindAndModify: false,
 }).then(con => {
 	console.log(con.connections);
 	console.log('DB CONNECTION SUCCESFULY');
