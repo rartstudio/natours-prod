@@ -56,10 +56,19 @@ const tourSchema = new mongoose.Schema({
 	},
 	//start date of tours
 	startDates: [Date]
+},
+{
+	toJSON: {virtuals: true},
+	toObject: {virtuals: true}
+});
+
+tourSchema.virtual('durationWeeks').get(function(){
+	return this.duration / 7
 });
 
 //create model base on schema
 const Tour = mongoose.model('Tour', tourSchema);
+
 
 //export as a class
 module.exports = Tour;
