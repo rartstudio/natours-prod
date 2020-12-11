@@ -11,12 +11,13 @@ const tourSchema = new mongoose.Schema({
 		maxLength: [40, 'A tour name must have less or equal then 40 characters'],
 		minLength: [10, 'A tour name must have more or equal then 10 characters'],
 		//using external library for validate
-		validate: [validator.isAlpha,'Tour name must only contain characters']
+		// validate: [validator.isAlpha,'Tour name must only contain characters']
 	},
 	slug: String,
 	duration : {
 		type: Number,
-		required: [true,'A tour must have a duration']
+		required: [true,'A tour must have a duration'],
+		min: 1
 	},
 	maxGroupSize: {
 		type: Number,
@@ -48,12 +49,11 @@ const tourSchema = new mongoose.Schema({
 	priceDiscount: {
 		type: Number,
 		validate: {
-			validator: function(val){
-				// this only points to current doc on new document creation
-				return val < this.price
-			},
-			//VALUES will have a access of the current value of priceDiscount
-			message: 'Discount price {{VALUE}} should be below regular price'
+			validator: function(val) {
+				// this only points to current doc on NEW document creation
+				return val < this.price;
+			  },
+			  message: 'Discount price ({VALUE}) should be below regular price'
 		}
 	},
 	summary: {
@@ -119,6 +119,8 @@ tourSchema.pre(/^find/,function(next){
 tourSchema.post(/^find/,function(docs,next){
 	console.log(`Query took ${Date.now() - this.start} milliseconds`);
 	// console.log(docs);
+	//add a new item before save
+	
 	next();
 });
 
