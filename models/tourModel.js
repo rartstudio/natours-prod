@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-const validator = require('validator');
+// const validator = require('validator');
+
+const User = require('./userModel');
 
 const tourSchema = new mongoose.Schema({
 	name: {
@@ -83,7 +85,43 @@ const tourSchema = new mongoose.Schema({
 	secretTour: {
 		type: Boolean,
 		default: false
-	}
+	},
+	//using embedded documents
+	startLocation: {
+		//geoJson
+		type : {
+			type: String,
+			default: 'Point',
+			enum: ['Point']
+		},
+		//array of numbers
+		coordinates : [Number],
+		address: String,
+		description: String
+	},
+	locations: [
+		{
+			type: {
+				type: String,
+				default: 'Point',
+				enum: ['Point']
+			},
+			coordinates: [Number],
+			address: String,
+			description: String,
+			day: Number
+		}
+	],
+	//embedding tour guides
+	// guides: Array
+
+	//child referencing tour guides
+	guides: [
+		{
+			type: mongoose.Schema.ObjectId,
+			ref: 'User'
+		}
+	]
 },
 {
 	toJSON: {virtuals: true},
@@ -105,10 +143,31 @@ tourSchema.pre('save', function (next){
 	next();
 })
 
+//do a embedding for guides when save
+tourSchema.pre('save',async function(next){
+	//find detail of user by id from req.body
+	//it will return a problem cause we return an array full of promises so we need to using promise all
+	const guidesPromises = this.guides.map(async id => await User.findById(id));
+	
+	this.guides = await Promise.all(guidesPromises);
+	next();
+})
+
+
 //query middleware 
 //run before all find match text
 //using reqular expression
 //can run with : find findOne findOneAndDelete findOneAndRemove findOneAndUpdate
+//add populate to getAllTour and getTour so we didnt need to have 2 same code
+tourSchema.pre(/^find/, function(next){
+	this.populate({
+		path: 'guides',
+		select: '-__v -passwordChangedAt'
+	});
+	next();
+});
+
+
 tourSchema.pre(/^find/,function(next){
 	this.find({secretTour: {$ne: true}});
 	this.start = Date.now();

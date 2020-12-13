@@ -20,7 +20,7 @@ mongoose
 //read json file
 //in fs ./ is refer to root folder
 //so we need to use __dirname to check current folder
-const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours-simple.json`,'utf-8'));
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`));
 
 
 //import data into DB
@@ -54,7 +54,7 @@ if(process.argv[2] === '--import'){
 	importData();
 }
 else if (process.argv[2] === '--delete'){
-	deleteData
+	deleteData();
 }
 
 
