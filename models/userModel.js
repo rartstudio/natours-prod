@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
+//import module from node crypto
+const crypto = require('crypto');
+
 const userSchema = new mongoose.Schema({
 	name: {
 		type: String,
@@ -16,6 +19,11 @@ const userSchema = new mongoose.Schema({
 	},
 	photo: {
 		type: String	
+	},
+	role : {
+		type: String,
+		enum: ['user','guide','lead-guide','admin'],
+		default: 'user'
 	},
 	password: {
         type: String,
@@ -36,7 +44,11 @@ const userSchema = new mongoose.Schema({
             message: 'Passwords are not the same'
         }
     },
-    passwordChangedAt: Date
+	passwordChangedAt: Date,
+	//field for password reset token for comparing
+	passwordResetToken: String,
+	//field for password reset expires
+	passwordResetExpires: Date
 });
 
 //that we receive that data and the moment where it's actually persisted to the database
@@ -55,6 +67,14 @@ userSchema.pre('save', async function(next){
 	this.passwordConfirm = undefined;
 	next();
 });
+
+userSchema.pre('save', function(next){
+	if(!this.isModified('password') || this.isNew) return next();
+	
+	this.passwordChangedAt = Date.now() - 1000;
+	next();
+});
+
 
 //add after userSchema.pre('save')
 //create a instance method basically that is gonna be available on all documents of a certain collections
@@ -76,6 +96,23 @@ userSchema.methods.changedPasswordAfter = function(JWTTimeStamp) {
 	
 	//false mean not changed
 	return false
+}
+
+userSchema.methods.createPasswordResetToken = function () {
+	
+	//create reset token
+	//32 is length of reset token
+	//change it to string with format hex
+	const resetToken = crypto.randomBytes(32).toString('hex');
+	
+	//we set to user database with password hashed
+	this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+	//add expired 10 minutes
+	this.passwordResetExpires = Date.now() + 10 * 60 *1000;
+
+	//we sent to client with non hash random bytes
+	return resetToken;
 }
 
 const User = mongoose.model('User',userSchema);

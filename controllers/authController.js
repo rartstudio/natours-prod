@@ -1,3 +1,6 @@
+//import module crypto
+const crypto = require('crypto');
+
 //import node modules for async jwt verify
 const {promisify} = require('util');
 
@@ -8,10 +11,25 @@ const jwt = require('jsonwebtoken');
 //import appError module
 const AppError = require('./../utils/appError');
 
+//import module from sendEmail
+const sendEmail = require('./../utils/email');
+
 const signToken = id => {
 	//get id of user, JWT_SECRET, JWT_EXPIRES_IN
 	return jwt.sign({id}, process.env.JWT_SECRET, {
 		expiresIn: process.env.JWT_EXPIRES_IN
+	});
+}
+
+const createSendToken = (user, statusCode, res) => {
+	const token = signToken(user._id);
+	
+	res.status(statusCode).json({
+		status: 'success',
+		token,
+		data: {
+			user
+		}
 	});
 }
 
@@ -23,16 +41,9 @@ exports.signup = catchAsync(async(req,res,next) => {
 		password: req.body.password,
 		passwordConfirm: req.body.passwordConfirm
 	});
-	
-	const token = signToken(newUser._id);
-	
-	res.status(201).json({
-		status: 'success',
-		token,
-		data: {
-			user: newUser
-		}
-	});
+
+	//log user in, send jwt
+	createSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async(req,res,next) => {
@@ -52,6 +63,7 @@ exports.login = catchAsync(async(req,res,next) => {
 		return next(new AppError('Incorrect email or password', 401));
 	}
 	
+	//old version you can use createSendToken if you want
 	//3. if everything is oke, send token to client
 	const token = signToken(user._id);
 	
@@ -92,4 +104,120 @@ exports.protect = catchAsync(async(req,res,next) => {
 	//GRANT ACCESS TO PROTECTED ROUTE
 	req.user = currentUser;
 	next();
+});
+
+exports.restrictTo = (...roles) => {
+	return (req,res,next) => {
+		//save all roles to roles variable return array
+		//roles ['admin','lead-guide'] , role='user'
+		
+		//check roles of user when accessing route 
+		//ex: if user pass roles user it will dont be allowed to access this route
+		//cause user roles not in array of roles can access this middleware 
+		//check tourRoutes to find what roles we pass
+		//accessing req.user.role from before middleware
+		if(!roles.includes(req.user.role)){
+			return next(new AppError('You dont have permission to perform this action',403))
+		}
+		next();
+	}
+}
+
+exports.forgotPassword = catchAsync(async (req,res,next) => {
+
+	if(!req.body.email){
+		return next(new AppError('We cant proceed without email address',400));
+	}
+
+	//1. get user based on posted email
+	const user = await User.findOne({email: req.body.email});
+
+	//check if user empty
+	if(!user){
+		return next(new AppError('There is no user with email address', 404));
+	}
+	
+	//2. generate the random reset token
+	const resetToken = user.createPasswordResetToken();
+	
+	//turn off validations before save
+	await user.save({validateBeforeSave: false})
+	
+	//3. send it to user's email
+	const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+
+	const message = `Forgot your password ? submit a patch request with your new password and password confirm to : ${resetURL}.\nIf you didnt forget your password, please ignore this email`
+	
+	try {
+		await sendEmail({
+			email: user.email,
+			subject: 'your password reset token invalid for 10 min',
+			message
+		});
+	
+		res.status(200).json({
+			status: 'success',
+			message: 'token sent to email'		
+		});
+	} catch(err){
+		//return to undefined if there is an error where send email
+		user.passwordResetToken = undefined;
+		user.passwordResetExpires =  undefined;
+		await user.save({validateBeforeSave: false})
+		
+		return next(new AppError('there was an error sending the email. try again later',500));
+	}
+});
+
+exports.resetPassword = catchAsync(async (req,res,next) => {
+	//1. get user based on the token
+	//encrypt token from req.params to compare it with database cause in database we encrypt it
+	const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+	
+	//find user with token and passwordResetExpires greater than Date.now() 
+	//remember we issued a token with expired 10 minutes, if more than 10 minutes it expired
+	//if less than 10 minutes it will return data to user
+	const user = await User.findOne({passwordResetToken: hashedToken, passwordResetExpires: {$gt: Date.now()}});
+	
+	//2. if token has not expired and there is a user, set the new password
+	if(!user){
+		return next(new AppError('Token is invalid or has expired',400));
+	}
+	
+	//set data from req body to document , set undefined to passwordResetExpires and passwordResetToken and then save it
+	user.password = req.body.password;
+	user.passwordConfirm = req.body.passwordConfirm;
+	user.passwordResetToken = undefined;
+	user.passwordResetExpires = undefined;
+	await user.save();
+	
+	//3. update changedpasswordat property for the user
+	//4. log the user in send jwt
+	const token = signToken(user._id);
+	
+	res.status(200).json({
+		status: 'success',
+		token
+	});
+});
+
+exports.updatePassword = catchAsync(async (req,res,next) => {
+	//1. get user from collection
+	//req.user is from authController.protect
+	const user = await User.findById(req.user.id).select('+password');
+	
+	//2. check if posted current password is correct
+	//current password must same with user data in database before updating to new password
+	if(!(await user.correctPassword(req.body.passwordCurrent, user.password))){
+		return next(new AppError('Your current password is wrong', 401));
+	}
+	
+	//3. if so, update password
+	user.password = req.body.password;
+	user.passwordConfirm = req.body.passwordConfirm;
+	await user.save();
+	//User.findByIdAndUpdate will NOT work as intended
+	
+	//4. log user in, send jwt
+	createSendToken(user, 200, res);
 });
