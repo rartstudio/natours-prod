@@ -159,6 +159,8 @@ tourSchema.pre('save',async function(next){
 //using reqular expression
 //can run with : find findOne findOneAndDelete findOneAndRemove findOneAndUpdate
 //add populate to getAllTour and getTour so we didnt need to have 2 same code
+
+//using populate cause we do child referencing
 tourSchema.pre(/^find/, function(next){
 	this.populate({
 		path: 'guides',
