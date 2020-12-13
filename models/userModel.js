@@ -48,8 +48,21 @@ const userSchema = new mongoose.Schema({
 	//field for password reset token for comparing
 	passwordResetToken: String,
 	//field for password reset expires
-	passwordResetExpires: Date
+	passwordResetExpires: Date, 
+
+	active : {
+		type: Boolean,
+		default: true,
+		select: false
+	}
 });
+
+userSchema.pre(/^find/, function(next){
+	//this points to current query
+	this.find({active: {$ne : false}});
+	next();
+});
+
 
 //that we receive that data and the moment where it's actually persisted to the database
 //and we will do encryption password
