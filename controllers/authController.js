@@ -24,13 +24,30 @@ const signToken = id => {
 const createSendToken = (user, statusCode, res) => {
 	const token = signToken(user._id);
 	
-	res.status(statusCode).json({
-		status: 'success',
-		token,
-		data: {
-			user
-		}
-	});
+	//set cookie expiration
+	const cookieOptions = {
+		expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+		//using httpOnly to prevent xss attack
+		httpOnly: true,
+	}
+	
+	//set https when productions
+	if(process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+	
+	//set cookie for jwt 
+	res.cookie('jwt', token, cookieOptions);
+	
+	//remove password from response body
+	user.password = undefined
+	
+	res.status(statusCode)
+		.json({
+			status: 'success',
+			token,
+			data: {
+				user
+			}
+		});
 }
 
 exports.signup = catchAsync(async(req,res,next) => {
@@ -65,12 +82,15 @@ exports.login = catchAsync(async(req,res,next) => {
 	
 	//old version you can use createSendToken if you want
 	//3. if everything is oke, send token to client
-	const token = signToken(user._id);
+	// const token = signToken(user._id);
 	
-	res.status(200).json({
-		status: 'success',
-		token
-	});
+	// res.status(200).json({
+	// 	status: 'success',
+	// 	token
+	// });
+
+	//log user in, send jwt
+	createSendToken(user, 200, res);
 });
 
 exports.protect = catchAsync(async(req,res,next) => {
