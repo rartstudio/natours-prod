@@ -4,7 +4,13 @@ const tourController = require('./../controllers/tourController');
 //import authController for protecting route;
 const authController = require('./../controllers/authController');
 
+//import review router
+const reviewRouter = require('./../routes/reviewRoutes');
+
 const router = express.Router();
+	
+//all route start from this will be redirected to reviewRouter
+router.use('/:tourId/reviews', reviewRouter);
 
 router
 	.route('/top-5-cheap')

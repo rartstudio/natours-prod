@@ -3,6 +3,7 @@ const morgan = require('morgan');
 
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 
 //import module rateLimit
 const rateLimit = require('express-rate-limit');
@@ -38,7 +39,7 @@ if(process.env.NODE_ENV === 'development') {
 //limit request from same api
 //is to allow 100 request from the same IP in one hour
 const limiter = rateLimit({
-	max: 5,
+	max: 100,
 	windowMs: 60 * 60 * 1000,
 	message: 'Too many requests from this IP, please try again in an hour'
 });
@@ -78,6 +79,7 @@ app.use((req,res,next) => {
 // 3) ROUTES
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 app.all('*', (req,res,next) => {
 	//res.status(404).json({
