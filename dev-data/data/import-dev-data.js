@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const Tour = require('./../../models/tourModel');
+const Review = require('./../../models/reviewModel');
+const User = require('./../../models/userModel');
 
 dotenv.config({path: './config.env'});
 
@@ -20,33 +22,40 @@ mongoose
 //read json file
 //in fs ./ is refer to root folder
 //so we need to use __dirname to check current folder
-const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`));
+//const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`));
+
+//READ JSON FILE
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`,'utf-8'));
+const users = JSON.parse(fs.readFileSync(`${__dirname}/users.json`,'utf-8'));
+const reviews = JSON.parse(fs.readFileSync(`${__dirname}/reviews.json`,'utf-8'));
 
 
-//import data into DB
+//IMPORT DATA INTO DB
 const importData = async () => {
-	try{
+	try {
 		await Tour.create(tours);
-		console.log('Data Successfully loaded');
-		//do it with wise cause it will impact of real application
-		process.exit();
+		await User.create(users, {validateBeforeSave: false});
+		await Review.create(reviews);
+		console.log('Data successfully loaded')
 	}
-	catch(err){
+	catch(err) {
 		console.log(err);
 	}
+	process.exit();
 }
 
-//delete all data from db
+//DELETE ALL DATA FROM DB
 const deleteData = async () => {
 	try {
 		await Tour.deleteMany();
-		console.log('Data successfully deleted!');
-		//do it with wise cause it will impact of real application
-		process.exit();
+		await User.deleteMany();
+		await Review.deleteMany();
+		console.log('data successfully deleted');
 	}
-	catch (err){
+	catch (err) {
 		console.log(err);
 	}
+	process.exit();
 }
 
 //choose 2 cause --import or --delete on third argument 
