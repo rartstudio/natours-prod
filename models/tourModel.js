@@ -33,11 +33,14 @@ const tourSchema = new mongoose.Schema({
 			message: 'Difficulty is either: easy, medium, difficult'
 		}
 	},
-	ratingsAverage: {
+	ratingsAverage : {
 		type: Number,
 		default: 4.5,
-		min: [1, 'Rating must be above 1'],
-		max: [5, 'Rating must be below 5']
+		min: [1, 'rating must be above 1.0'],
+		max: [5, 'rating must be below 5.0'],
+		//add setter, setter will be run each time that a new value is set for this field
+		//we multiply it by 10 and divide 10 so we can get a value like 4.7
+		set: val => Math.round(val * 10) / 10
 	},
 	ratingsQuantity : {
 		type: Number,
@@ -127,6 +130,21 @@ const tourSchema = new mongoose.Schema({
 	toJSON: {virtuals: true},
 	toObject: {virtuals: true}
 });
+
+//we add index on model
+//we add index more performant when querying data
+//-1 or 1 its doesnt matter
+//1 is an ascending order
+//-1 is descending order
+
+//compound index
+tourSchema.index({price: 1, ratingsAverage: -1});
+
+//normal index
+tourSchema.index({slug : 1})
+
+//convert it to index 2dsphere
+tourSchema.index({startLocation: '2dsphere'});
 
 tourSchema.virtual('durationWeeks').get(function(){
 	return this.duration / 7

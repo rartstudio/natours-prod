@@ -38,6 +38,8 @@ exports.getAll = Model => catchAsync(async(req,res,next) => {
 		.paginate();
 		
 	const doc = await features.query
+
+	// const doc = await features.query.explain();
 	
 	//send response
 	res.status(200).json({
