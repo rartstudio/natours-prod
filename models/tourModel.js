@@ -168,14 +168,14 @@ tourSchema.pre('save', function (next){
 })
 
 //do a embedding for guides when save
-tourSchema.pre('save',async function(next){
-	//find detail of user by id from req.body
-	//it will return a problem cause we return an array full of promises so we need to using promise all
-	const guidesPromises = this.guides.map(async id => await User.findById(id));
+// tourSchema.pre('save',async function(next){
+// 	//find detail of user by id from req.body
+// 	//it will return a problem cause we return an array full of promises so we need to using promise all
+// 	const guidesPromises = this.guides.map(async id => await User.findById(id));
 	
-	this.guides = await Promise.all(guidesPromises);
-	next();
-})
+// 	this.guides = await Promise.all(guidesPromises);
+// 	next();
+// })
 
 
 //query middleware 
