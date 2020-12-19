@@ -246,27 +246,40 @@ exports.updatePassword = catchAsync(async (req,res,next) => {
 });
 
 //for rendered pages , there will be no error
-exports.isLoggedIn = catchAsync(async(req,res,next) => {
+exports.isLoggedIn = async (req,res, next) => {
 	if(req.cookies.jwt){
-		//1. verification token
-		const decoded = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET);
-		console.log(decoded);
+		try{
+			//1.verify token
+			const decoded = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET);
 		
-		//2. Check if user still exists
-		const currentUser = await User.findById(decoded.id);
-		if(!currentUser){
+			//2. check if user still exists
+			const currentUser = await User.findById(decoded.id);
+			if(!currentUser){
+				return next();
+			}
+		
+			//3. check if user changed password after the token was issued
+			if(currentUser.changedPasswordAfter(decoded.iat)){
+				return next();
+			}
+			
+			//4.there is a logged in user
+			//add a new key to defined a user login or not then send it to response so pug template can use it
+			//and it will convert it to variable like a render function
+			res.locals.user = currentUser;
 			return next();
 		}
-		
-		//4. Check if user changed password after the token was issued
-		if(currentUser.changedPasswordAfter(decoded.iat)){
+		catch(err){
 			return next();
 		}
-		
-		//GRANT ACCESS TO PROTECTED ROUTE
-		//set a response user for pug accessing
-		res.locals.user = currentUser;
-		return next();
 	}
 	next();
-});
+}
+
+exports.logout = (req,res) => {
+	res.cookie('jwt','logged out',{
+		expires: new Date(Date.now() + 10 * 1000),
+		httpOnly: true
+	});
+	res.status(200).json({status:'success'});
+};

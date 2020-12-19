@@ -20,6 +20,8 @@ router.get('/me', userController.getMe, userController.getUser);
 router.patch('/updateMe', userController.updateMe);
 router.delete('/deleteMe',userController.deleteMe);
 
+router.get('/logout', authController.logout);
+
 //protect middleware after it with restrict to admin
 router.use(authController.restrictTo('admin'));
 
