@@ -101,6 +101,9 @@ exports.protect = catchAsync(async(req,res,next) => {
 	if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')){
 		token = req.headers.authorization.split(' ')[1];
 	}
+	else if(req.cookies.jwt){
+		token = req.cookies.jwt
+	}
 	
 	if(!token){
 		return next(new AppError('You are not logged in! please login to get access',401));
@@ -240,4 +243,30 @@ exports.updatePassword = catchAsync(async (req,res,next) => {
 	
 	//4. log user in, send jwt
 	createSendToken(user, 200, res);
+});
+
+//for rendered pages , there will be no error
+exports.isLoggedIn = catchAsync(async(req,res,next) => {
+	if(req.cookies.jwt){
+		//1. verification token
+		const decoded = await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET);
+		console.log(decoded);
+		
+		//2. Check if user still exists
+		const currentUser = await User.findById(decoded.id);
+		if(!currentUser){
+			return next();
+		}
+		
+		//4. Check if user changed password after the token was issued
+		if(currentUser.changedPasswordAfter(decoded.iat)){
+			return next();
+		}
+		
+		//GRANT ACCESS TO PROTECTED ROUTE
+		//set a response user for pug accessing
+		res.locals.user = currentUser;
+		return next();
+	}
+	next();
 });
