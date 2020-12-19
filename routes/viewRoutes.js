@@ -9,6 +9,7 @@ const viewsController = require('../controllers/viewController');
 //underscore file is include part
 router.get('/', viewsController.getOverview);
 router.get('/tours/:slug', viewsController.getTour);
+router.get('/login', viewsController.getLoginForm);
 
 
 module.exports = router;
