@@ -32,7 +32,7 @@ const createSendToken = (user, statusCode, res) => {
 	}
 	
 	//set https when productions
-	if(process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+	// if(process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 	
 	//set cookie for jwt 
 	res.cookie('jwt', token, cookieOptions);
@@ -126,6 +126,7 @@ exports.protect = catchAsync(async(req,res,next) => {
 	
 	//GRANT ACCESS TO PROTECTED ROUTE
 	req.user = currentUser;
+	res.locals.user = currentUser;
 	next();
 });
 
