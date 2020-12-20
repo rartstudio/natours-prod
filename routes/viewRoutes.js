@@ -10,7 +10,7 @@ const authController = require('../controllers/authController');
 //another file except base.pug is pages 
 //underscore file is include part
 router.get('/', authController.isLoggedIn, viewsController.getOverview );
-router.get('/tour/:slug', authController.isLoggedIn, viewsController.getTour);
+router.get('/tours/:slug', authController.isLoggedIn, viewsController.getTour);
 router.get('/login',authController.isLoggedIn, viewsController.getLoginForm);
 router.get('/me', authController.protect, viewsController.getAccount);
 
