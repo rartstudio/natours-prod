@@ -24,6 +24,7 @@ const handleValidationErrorDB = err => {
 
 const sendErrorDev = (err, req, res) => {
   // A) API
+  console.log(req.originalUrl);
   if (req.originalUrl.startsWith('/api')) {
     return res.status(err.statusCode).json({
       status: err.status,
@@ -90,7 +91,7 @@ module.exports = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req,res);
   } else if (process.env.NODE_ENV === 'production') {
     let error = { ...err };
     error.message = err.message;
