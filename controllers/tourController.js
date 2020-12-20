@@ -11,6 +11,49 @@ const catchAsync = require('./../utils/catchAsync');
 //import handlerfactory
 const factory = require('./handlerFactory');
 
+//upload image
+const multer = require('multer');
+
+//for resizing image
+const sharp = require('sharp');
+
+//using as memory buffer because we need to resize an image first
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req,file,callback) => {
+	//checking image is image or not
+	//everything ext image like jpeg jpg png or gif will start with image/ext
+	if(file.mimetype.startsWith('image')){
+		callback(null,true)
+	}
+	else {
+		callback(new AppError('Not an image! please upload only images', 400), false);
+	}
+}
+
+//configure multer upload
+const upload = multer({
+	storage: multerStorage,
+	fileFilter: multerFilter
+});
+
+exports.uploadTourImages = upload.fields([
+	//multi field
+	{name: 'imageCover', maxCount: 1},
+	{name: 'images', maxCount:3}
+]);
+
+//if just one field with single image
+// upload.single('image'); req.file
+
+//if just a one field
+// upload.array('images',5); req.files
+
+exports.resizeTourImages = (req,res,next) => {
+	console.log(req.files);
+	next();
+}
+
 //prefilling limit, sort ,fields
 exports.aliasTopTours = (req,res,next) => {
 	req.query.limit = '5';
