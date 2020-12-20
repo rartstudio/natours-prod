@@ -1,7 +1,12 @@
 //import module user and catchAsync
 const User = require('./../models/userModel');
 const catchAsync = require('./../utils/catchAsync');
+
+//upload image
 const multer = require('multer');
+
+//for resizing image
+const sharp = require('sharp');
 
 //import app error module
 const AppError = require('./../utils/appError');
@@ -10,18 +15,21 @@ const AppError = require('./../utils/appError');
 const factory = require('./handlerFactory');
 
 //set a storage to save image
-const multerStorage = multer.diskStorage({
-	//set destination of image
-	destination: (req, file, callback) => {
-		callback(null, 'public/img/users');
-	},
-	filename: (req, file, callback) => {
-		//format file
-		//user-userid-currenttimestamp.jpeg
-		const ext = file.mimetype.split('/')[1];
-		callback(null,`user-${req.user.id}-${Date.now()}.${ext}`);
-	}
-}); 
+// const multerStorage = multer.diskStorage({
+// 	//set destination of image
+// 	destination: (req, file, callback) => {
+// 		callback(null, 'public/img/users');
+// 	},
+// 	filename: (req, file, callback) => {
+// 		//format file
+// 		//user-userid-currenttimestamp.jpeg
+// 		const ext = file.mimetype.split('/')[1];
+// 		callback(null,`user-${req.user.id}-${Date.now()}.${ext}`);
+// 	}
+// }); 
+
+//using as memory buffer because we need to resize an image first
+const multerStorage = multer.memoryStorage();
 
 const multerFilter = (req,file,callback) => {
 	//checking image is image or not
@@ -52,6 +60,19 @@ const filterObj = (obj, ...allowedFields) => {
 }
 
 exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = (req,res,next) => {
+	if(!req.file) return next();
+
+	//set a file name cause we need it at next middleware
+	//using buffer will make a image filename dont get set so we define it manually
+	req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+	//get a image from buffer
+	sharp(req.file.buffer).resize(500,500).toFormat('jpeg').jpeg({quality: 90}).toFile(`public/img/users/${req.file.filename}`);
+
+	next();
+};
 
 exports.updateMe = catchAsync(async (req,res,next) => {
 	//test upload image
