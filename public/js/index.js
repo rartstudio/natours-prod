@@ -2,13 +2,14 @@ import '@babel/polyfill';
 import {displayMap} from './mapbox';
 import {login, logout} from './login';
 import { updateSettings } from './updateSettings';
+import { bookTour } from './stripe';
 
 const loginForm = document.querySelector('.form--login');
 const mapBox = document.getElementById('map');
 const logOutBtn = document.querySelector('.nav__el--logout');
 const userDataForm = document.querySelector('.form-user-data');
 const userPasswordForm = document.querySelector('.form-user-password')
-
+const bookBtn = document.getElementById('book-tour')
 //checking if id map exist
 if(mapBox){
     const locations = JSON.parse(mapBox.dataset.locations);
@@ -60,4 +61,18 @@ if(userPasswordForm){
 		document.getElementById('password-confirm').value = '';
 		document.querySelector('.btn--save-password').textContent = 'Save Password' ;
 	});
+}
+
+if(bookBtn) {
+	bookBtn.addEventListener('click', e => {
+		e.target.textContent = 'Processing...';
+		//accessing data from dataset
+		//remember we set data with name data-tour-id and it will be converted to tourId
+		//and since our data save in object so we can use destructuring too
+		const { tourId } = e.target.dataset;
+		// bookTour(tourId);
+		// console.log(e);
+		// console.log(tourId)
+		bookTour(tourId);
+	})
 }
