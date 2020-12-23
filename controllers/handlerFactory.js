@@ -2,7 +2,7 @@ const catchAsync = require('./../utils/catchAsync');
 const AppError = require('./../utils/appError');
 
 //import module new api feature
-const APIFeatures = require('./../utils/apiFeatures');
+const APIFeatures = require('./../utils/APIFeatures');
 
 exports.getOne = (Model, popOptions) =>
   catchAsync(async (req, res, next) => {
