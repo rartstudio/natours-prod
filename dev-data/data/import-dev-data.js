@@ -36,10 +36,10 @@ const importData = async () => {
 		await Tour.create(tours, {validateBeforeSave: false});
 		await User.create(users, {validateBeforeSave: false});
 		await Review.create(reviews , {validateBeforeSave: false});
-		console.log('Data successfully loaded')
+		// console.log('Data successfully loaded')
 	}
 	catch(err) {
-		console.log(err);
+		// console.log(err);
 	}
 	process.exit();
 }
@@ -50,10 +50,10 @@ const deleteData = async () => {
 		await Tour.deleteMany();
 		await User.deleteMany();
 		await Review.deleteMany();
-		console.log('data successfully deleted');
+		// console.log('data successfully deleted');
 	}
 	catch (err) {
-		console.log(err);
+		// console.log(err);
 	}
 	process.exit();
 }
@@ -67,7 +67,7 @@ else if (process.argv[2] === '--delete'){
 }
 
 
-console.log(process.argv);
+// console.log(process.argv);
 //result on array
 //'usr/local/bin/node' from node of first argument
 //'folder/import-dev-data.js' from seconde argument

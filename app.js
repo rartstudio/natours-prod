@@ -26,6 +26,8 @@ const xss = require('xss-clean');
 //import module http parameter pollution
 const hpp = require('hpp');
 
+const compression = require('compression');
+
 const cookieParser = require('cookie-parser');
 
 //import our appError class
@@ -81,7 +83,7 @@ app.use(hpp({
 	whitelist: ['duration','ratingsQuantity','ratingsAverage','maxGroupSize','difficulty','price']
 }));
 
-
+app.use(compression());
 
 //app.use(express.static(`${__dirname}/public`));
 

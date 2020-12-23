@@ -76,8 +76,8 @@ exports.resizeUserPhoto = catchAsync(async(req,res,next) => {
 
 exports.updateMe = catchAsync(async (req,res,next) => {
 	//test upload image
-	console.log(req.file);
-	console.log(req.body);
+	// console.log(req.file);
+	// console.log(req.body);
 	//1. create error if user POST password data
 	if(req.body.password || req.body.passwordConfirm) {
 		return next(new AppError('This route is not for password updates. please use /updateMyPassword',400));

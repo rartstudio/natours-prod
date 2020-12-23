@@ -76,7 +76,7 @@ reviewSchema.statics.calcAverageRatings = async function(tourId){
 			}
 		}
 	]);
-	console.log(stats);
+	// console.log(stats);
 	
 	if(stats.length > 0){
 		//update a ratings average and avg rating on tour

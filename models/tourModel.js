@@ -202,7 +202,7 @@ tourSchema.pre(/^find/,function(next){
 
 //run after all find match text
 tourSchema.post(/^find/,function(docs,next){
-	console.log(`Query took ${Date.now() - this.start} milliseconds`);
+	// console.log(`Query took ${Date.now() - this.start} milliseconds`);
 	// console.log(docs);
 	//add a new item before save
 	
@@ -212,7 +212,7 @@ tourSchema.post(/^find/,function(docs,next){
 //aggregation middleware
 tourSchema.pre('aggregate', function(next) {
 	this.pipeline().unshift({$match : {secretTour : {$ne: true}}});
-	console.log(this.pipeline());
+	// console.log(this.pipeline());
 	next();
 });
 
