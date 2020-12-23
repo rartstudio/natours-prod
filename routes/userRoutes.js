@@ -15,12 +15,17 @@ router.patch('/resetPassword/:token', authController.resetPassword);
 //to protect middleware after it
 router.use(authController.protect);
 
-router.patch('/updateMyPassword',authController.updatePassword);
+router.patch('/updateMyPassword', authController.updatePassword);
 router.get('/me', userController.getMe, userController.getUser);
 
-//upload single cause we just do a upload single image, and photo is name field 
-router.patch('/updateMe', userController.uploadUserPhoto, userController.resizeUserPhoto, userController.updateMe);
-router.delete('/deleteMe',userController.deleteMe);
+//upload single cause we just do a upload single image, and photo is name field
+router.patch(
+  '/updateMe',
+  userController.uploadUserPhoto,
+  userController.resizeUserPhoto,
+  userController.updateMe
+);
+router.delete('/deleteMe', userController.deleteMe);
 
 router.get('/logout', authController.logout);
 

@@ -10,7 +10,6 @@ const reviewRouter = require('./routes/reviewRoutes');
 const viewRouter = require('./routes/viewRoutes');
 const bookingRouter = require('./routes/bookingRoutes');
 
-
 //import module rateLimit
 const rateLimit = require('express-rate-limit');
 
@@ -49,24 +48,24 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(helmet());
 
 //development logging
-if(process.env.NODE_ENV === 'development') {
-	app.use(morgan('dev'))
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
 }
 
 //limit request from same api
 //is to allow 100 request from the same IP in one hour
 const limiter = rateLimit({
-	max: 100,
-	windowMs: 60 * 60 * 1000,
-	message: 'Too many requests from this IP, please try again in an hour'
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP, please try again in an hour'
 });
-app.use('/api',limiter);
+app.use('/api', limiter);
 
 //body parser, reading data from body into req.body
-app.use(express.json({limit: '50mb'}));
+app.use(express.json({ limit: '50mb' }));
 
 //using url encoded
-app.use(express.urlencoded({extended: true, limit: '10kb'}));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 //pass data from cookie
 app.use(cookieParser());
@@ -78,21 +77,30 @@ app.use(mongoSanitize());
 app.use(xss());
 
 //prevent parameter pollution
-app.use(hpp({
-	//give a white list cause duration we want to using between
-	whitelist: ['duration','ratingsQuantity','ratingsAverage','maxGroupSize','difficulty','price']
-}));
+app.use(
+  hpp({
+    //give a white list cause duration we want to using between
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price'
+    ]
+  })
+);
 
 app.use(compression());
 
 //app.use(express.static(`${__dirname}/public`));
 
 //test middleware
-app.use((req,res,next) => {
-	req.requestTime = new Date().toISOString();
-	// console.log(req.cookies)
-	next();
-})
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString();
+  // console.log(req.cookies)
+  next();
+});
 
 //a global middleware running before all routes
 // app.use((req, res, next) => {
@@ -105,25 +113,25 @@ app.use('/', viewRouter);
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/reviews', reviewRouter);
-app.use('/api/v1/bookings',bookingRouter);
+app.use('/api/v1/bookings', bookingRouter);
 
-app.all('*', (req,res,next) => {
-	//res.status(404).json({
-	//	status: 'fail',
-	//	message: `cant find on ${req.originalUrl}this server`
-	//});
-	
-	//using a global error handling middleware
-	//const err = new Error(`cant find on ${req.originalUrl}this server`);
-	//err.status = 'fail';
-	//err.statusCode = 404;
-	
-	//if we pass an variabel err to next function
-	//express will know there is an error
-	//next(err);
-	
-	//using our class appError
-	next(new AppError(`cant find ${req.originalUrl} on this server`,404));
+app.all('*', (req, res, next) => {
+  //res.status(404).json({
+  //	status: 'fail',
+  //	message: `cant find on ${req.originalUrl}this server`
+  //});
+
+  //using a global error handling middleware
+  //const err = new Error(`cant find on ${req.originalUrl}this server`);
+  //err.status = 'fail';
+  //err.statusCode = 404;
+
+  //if we pass an variabel err to next function
+  //express will know there is an error
+  //next(err);
+
+  //using our class appError
+  next(new AppError(`cant find ${req.originalUrl} on this server`, 404));
 });
 
 app.use(globalErrorHandler);
